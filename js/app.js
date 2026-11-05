@@ -1048,3 +1048,41 @@ async function boot() {
 }
 
 boot();
+
+/* ── полноэкранный режим: кнопка в шапке и клавиша F ───────────── */
+(function fullscreen() {
+  const btn = document.getElementById('fsBtn');
+  if (!btn) return;
+  const root = document.documentElement;
+  const supported = !!(root.requestFullscreen || root.webkitRequestFullscreen);
+  const isOn = () => !!(document.fullscreenElement || document.webkitFullscreenElement) || root.classList.contains('fs-on');
+  const sync = () => {
+    const on = isOn();
+    btn.setAttribute('aria-label', on ? 'Выйти из полноэкранного режима' : 'Развернуть на весь экран');
+    btn.title = on ? 'Выйти из полноэкранного режима (Esc)' : 'Во весь экран (F)';
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  };
+  const enter = () => {
+    const el = root;
+    if (el.requestFullscreen) return el.requestFullscreen().catch(() => { root.classList.add('fs-on'); sync(); });
+    if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); return; }
+    root.classList.add('fs-on');   // запасной вариант: без API — растянуть на окно
+    sync();
+  };
+  const exit = () => {
+    if (document.fullscreenElement && document.exitFullscreen) return document.exitFullscreen();
+    if (document.webkitFullscreenElement && document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    root.classList.remove('fs-on');
+    sync();
+  };
+  const toggle = () => (isOn() ? exit() : enter());
+  btn.addEventListener('click', toggle);
+  document.addEventListener('keydown', (e) => {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) toggle();
+  });
+  document.addEventListener('fullscreenchange', () => { root.classList.toggle('fs-on', false); sync(); });
+  document.addEventListener('webkitfullscreenchange', sync);
+  if (!supported) btn.hidden = false;
+  sync();
+})();

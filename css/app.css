@@ -918,3 +918,25 @@ html[data-theme="light"] .les-room { background: color-mix(in srgb, var(--accent
 html[data-theme="light"] .les-teacher { color: #4B5563; }
 html[data-theme="light"] .les-grp { box-shadow: none; color: #5B21B6; background: rgba(124, 58, 237, .1); border-color: rgba(124, 58, 237, .4); }
 html[data-theme="light"] .les:hover { box-shadow: 0 6px 14px -8px rgba(11,14,20,.25), inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+
+/* ── полноэкранный режим ─────────────────────────────────────── */
+.fs-btn {
+  flex: none; width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--muted); background: var(--surface);
+  border: 1px solid var(--line);
+  transition: color .16s, border-color .16s, background .16s, box-shadow .16s;
+}
+.fs-btn:hover { color: var(--ink); border-color: var(--purple); background: var(--surface-2);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--purple) 35%, transparent), 0 0 14px rgba(139,92,246,.22); }
+.fs-btn:active { background: var(--surface-3); }
+.fs-btn svg { width: 16px; height: 16px; }
+.fs-btn .fs-out { display: none; }
+:fullscreen .fs-btn .fs-in, .fs-on .fs-btn .fs-in { display: none; }
+:fullscreen .fs-btn .fs-out, .fs-on .fs-btn .fs-out { display: block; }
+:fullscreen body, .fs-on body { overflow: auto; }
+:fullscreen .bar, .fs-on .bar { top: 0; }
+:fullscreen .app, .fs-on .app { max-width: none; }
+@media (max-width: 900px) { .fs-btn { width: 40px; height: 40px; } }
+@media print { .fs-btn { display: none; } }
