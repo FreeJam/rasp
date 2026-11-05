@@ -228,14 +228,13 @@ html[data-theme="light"] .seg-btn.is-active { background: var(--surface-3); }
 }
 .board-frame::before,
 .board-frame::after {
+  content: none; display: none;
   position: absolute; z-index: 8;
   font-family: var(--f-display); font-size: 8.5px; font-weight: 600;
   letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
   background: var(--bg); padding: 0 8px; line-height: 1;
   pointer-events: none;
 }
-.board-frame::before { content: "sys · расписание"; top: -4px; left: 16px; }
-.board-frame::after { content: "live feed"; bottom: -4px; right: 16px; }
 .hud {
   position: absolute; width: 18px; height: 18px; z-index: 7; pointer-events: none;
   border: 0 solid transparent;
