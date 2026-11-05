@@ -392,31 +392,46 @@ function renderBoard() {
   let html = `<div class="print-head"><strong>${esc(ent.name)}</strong> — неделя</div>`;
   html += `<div class="grid-wrap"><div class="week" style="--pcount:${periods.length};grid-template-columns:var(--day-w) ${cols}">`;
 
-  html += `<div class="wk-corner">день / урок</div>`;
-  for (const p of periods) {
+  html += `<div class="wk-corner" style="grid-row:1;grid-column:1">день / урок</div>`;
+  periods.forEach((p, j) => {
     const now = n.cur && n.cur.n === p.n;
-    html += `<div class="wk-ph ${now ? 'is-now' : ''} ${extraCol(p.n) ? 'is-extra' : ''}" data-timenum="${p.n}">
+    html += `<div class="wk-ph ${now ? 'is-now' : ''} ${extraCol(p.n) ? 'is-extra' : ''}"
+      style="grid-row:1;grid-column:${j + 2}" data-timenum="${p.n}">
       <b>${p.n}</b><span>${fmtTime(p.start)}-${fmtTime(p.end)}</span></div>`;
-  }
+  });
 
-  for (const d of D.meta.days) {
+  D.meta.days.forEach((d, i) => {
     const isToday = n.day === d.i;
-    html += `<div class="wk-day ${isToday ? 'is-today' : ''}" data-day="${d.i}">
-      <b><span class="d-long">${d.full}</span><span class="d-short">${d.short}</span></b>
+    const row = i + 2;
+    // полоса дня: широкий фон под плитками
+    html += `<div class="lane ${isToday ? 'is-today' : ''}" style="grid-row:${row};grid-column:2/-1" aria-hidden="true"></div>`;
+    html += `<div class="wk-day ${isToday ? 'is-today' : ''}" style="grid-row:${row};grid-column:1" data-day="${d.i}">
+      <b>${d.short}</b>
       <span>${counts[d.i]}<em>${plural(counts[d.i], ' урок', ' урока', ' уроков')}</em></span>
       ${isToday ? '<i class="today-tag">сегодня</i>' : ''}</div>`;
-    for (const p of periods) {
+    periods.forEach((p, j) => {
       const list = visibleEntries(cellsFor(d.i)[String(p.n)]);
-      html += `<div class="wk-cell ${list.length ? '' : 'is-empty'} ${isToday ? 'is-today' : ''} ${p.n % 2 === 0 ? 'is-alt' : ''}"
+      html += `<div class="wk-cell ${list.length ? '' : 'is-empty'} ${p.n % 2 === 0 ? 'is-alt' : ''}"
+        style="grid-row:${row};grid-column:${j + 2}"
         data-slot="${d.i}-${p.n}">${cardsHTML(list, ent)}</div>`;
-    }
-  }
+    });
+  });
 
   html += `</div></div>`;
   board.innerHTML = html;
   markNow(n);
   const gw = $('.grid-wrap');
-  if (gw) gw.classList.toggle('is-scrollable', gw.scrollWidth > gw.clientWidth + 4);
+  if (gw) {
+    gw.classList.toggle('is-scrollable', gw.scrollWidth > gw.clientWidth + 4);
+    // подводим к текущему уроку, если он за краем
+    const cur = nowInfo();
+    if (cur.cur) {
+      const cell = gw.querySelector(`.wk-cell[data-slot="${cur.day}-${cur.cur.n}"]`);
+      if (cell && (cell.offsetLeft > gw.scrollLeft + gw.clientWidth - 80)) {
+        gw.scrollLeft = Math.max(0, cell.offsetLeft - 140);
+      }
+    }
+  }
 }
 
 function emptyHTML(ent) {
