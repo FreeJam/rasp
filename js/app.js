@@ -225,12 +225,24 @@ function nowInfo() {
   };
 }
 
+/* урок, который идёт (или следующий) у выбранной сущности */
+function lessonAt(day, period) {
+  if (day < 0 || !period) return null;
+  const list = cellsFor(day)[String(period.n)];
+  return (list && list[0]) || null;
+}
+
 function tickLive() {
   if (!D) return;
   const n = nowInfo();
   const box = $('#live');
   const txt = $('#liveText');
   const bar = $('#liveBar');
+  const sub = (e) => {
+    if (!e) return '';
+    const room = e.r.map((r) => r.short).join(', ');
+    return `<span class="live-sub"> · ${esc(e.s.short)}${room ? ' · ' + esc(room) : ''}</span>`;
+  };
 
   if (n.day < 0) {
     box.classList.remove('is-break');
@@ -239,17 +251,17 @@ function tickLive() {
   } else if (n.cur) {
     box.classList.remove('is-break');
     const left = toMin(n.cur.end) - n.mins;
-    txt.innerHTML = `<b>${n.cur.n}-й урок</b> · ${range(n.cur)} · ещё ${left} ${plural(left, 'минута', 'минуты', 'минут')}`;
+    txt.innerHTML = `<b>${n.cur.n}-й урок</b>${sub(lessonAt(n.day, n.cur))} · ${range(n.cur)}<span class="live-rest"> · ещё ${left} ${plural(left, 'минута', 'минуты', 'минут')}</span>`;
     const total = toMin(n.cur.end) - toMin(n.cur.start);
     bar.style.width = Math.max(2, Math.min(100, ((n.mins - toMin(n.cur.start)) / total) * 100)) + '%';
   } else if (n.next) {
     box.classList.add('is-break');
     const left = toMin(n.next.start) - n.mins;
-    txt.innerHTML = `<b>Перемена</b> · ${n.next.n}-й урок через ${left} ${plural(left, 'минуту', 'минуты', 'минут')}`;
+    txt.innerHTML = `<b>Перемена</b>${sub(lessonAt(n.day, n.next))} · ${n.next.n}-й урок в ${fmtTime(n.next.start)}<span class="live-rest"> · через ${left} ${plural(left, 'минуту', 'минуты', 'минут')}</span>`;
     bar.style.width = '0%';
   } else {
     box.classList.add('is-break');
-    txt.innerHTML = '<b>Уроки закончились</b> · до завтра';
+    txt.innerHTML = '<b>Уроки закончились</b><span class="live-rest"> · до завтра</span>';
     bar.style.width = '0%';
   }
   markNow(n);
@@ -774,14 +786,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#sheetWrap').hidden) closeSheet();
 });
 
-/* компактная панель при прокрутке */
-(function navScroll() {
-  const nav = $('#nav');
-  const upd = () => nav.classList.toggle('is-compact', window.scrollY > 44);
-  window.addEventListener('scroll', upd, { passive: true });
-  upd();
-})();
-
 /* свой скроллбар */
 (function scrollbar() {
   const bar = $('.scrollbar');
@@ -817,7 +821,6 @@ async function boot() {
 
   buildIndexes();
   restoreState();
-  $('#brandSub').textContent = D.meta.subtitle || '10–11 классы';
   render();
   tickLive();
   setInterval(tickLive, 15000);
