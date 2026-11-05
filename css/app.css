@@ -869,3 +869,52 @@ html[data-theme="light"] .wk-corner, html[data-theme="light"] .wk-ph { box-shado
   .wk-ph { position: static; }
   .grid-wrap { max-height: none; min-height: 0; overflow: visible; }
 }
+
+
+/* ── выравнивание и акценты в ячейках уроков ───────────────────── */
+/* название — сверху, плотнее и крупнее; кабинет — чип справа-сверху */
+.les-sub { font-size: 15.5px; font-weight: 700; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.les-top { align-items: center; justify-content: space-between; }
+.les-top .les-grp { order: 2; }
+.les-sub { order: 1; }
+
+/* мета-строка: кабинет как чип, учитель приглушён */
+.les-meta { align-items: center; gap: 7px; }
+.les-room {
+  padding: 2px 6px 1px; border: 1px solid var(--cell-line, rgba(255,255,255,.14));
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--ink); font-size: 12px; line-height: 1.2;
+  box-shadow: 0 1px 0 rgba(0,0,0,.3);
+}
+.les-teacher { color: var(--muted-2); font-size: 12.5px; }
+.les-sep { color: var(--accent); opacity: .7; }
+
+/* одна пара — текст центрируется по высоте ячейки */
+.les:not(.les-combo .les) { justify-content: center; }
+.les:not(.les-combo .les) .les-meta { margin-top: 4px; }
+
+/* тег подгруппы — вынесен в метку, а не текст */
+.les-grp {
+  padding: 2px 5px 1px; border: 1px solid color-mix(in srgb, var(--purple) 55%, transparent);
+  background: color-mix(in srgb, var(--purple) 14%, transparent);
+  color: var(--ink); font-size: 8.5px; letter-spacing: .1em;
+  box-shadow: 0 0 10px rgba(139, 92, 246, .25);
+}
+
+/* внеурочка и элективы — тише, курсив не используем; тонкая рамка */
+.les.is-extra .les-sub { font-weight: 600; color: var(--ink-2); }
+.les.is-extra .les-room { background: color-mix(in srgb, var(--accent) 9%, transparent); border-style: solid; border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+
+/* текущий урок: мягкое свечение текста и рамка-градиент */
+.les.is-now .les-sub { text-shadow: 0 0 12px rgba(139, 92, 246, .55); }
+.les.is-now .les-room { border-color: rgba(139, 92, 246, .7); background: rgba(139, 92, 246, .22); }
+
+/* тень на карточке при наведении — глубина */
+.les:hover { box-shadow: 0 6px 18px -8px rgba(0,0,0,.7), inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); z-index: 2; }
+
+/* светлая тема: текст и чип контрастнее, тени мягче */
+html[data-theme="light"] .les-sub { text-shadow: none; }
+html[data-theme="light"] .les-room { background: color-mix(in srgb, var(--accent) 12%, #fff); border-color: color-mix(in srgb, var(--accent) 40%, #fff); box-shadow: none; }
+html[data-theme="light"] .les-teacher { color: #4B5563; }
+html[data-theme="light"] .les-grp { box-shadow: none; color: #5B21B6; background: rgba(124, 58, 237, .1); border-color: rgba(124, 58, 237, .4); }
+html[data-theme="light"] .les:hover { box-shadow: 0 6px 14px -8px rgba(11,14,20,.25), inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
