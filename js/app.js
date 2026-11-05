@@ -311,6 +311,101 @@ function renderPicker() {
   document.title = `${ent.name} — Расписание уроков`;
 }
 
+/* ── генеративный рисунок предмета ───────────────────────────────
+   Каждый предмет получает свой узор: форма — по направлению (наука → орбиты,
+   гуманитарные → волны, информатика → частицы, математика → лучи, прочее → сетка),
+   а параметры (углы, частоты, точки) — детерминированно из id предмета. */
+function hashStr(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function seeded(seed) {
+  let a = seed | 0;
+  return () => {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const ART = {
+  orbit(r) {
+    const cx = 60 + (r() - 0.5) * 16, cy = 40 + (r() - 0.5) * 10;
+    let out = `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.2" fill="currentColor"/>`;
+    const n = 2 + Math.floor(r() * 2);
+    for (let i = 0; i < n; i++) {
+      const rx = 16 + i * 13 + r() * 5, ry = rx * (0.3 + r() * 0.35);
+      const rot = (r() * 180).toFixed(1), a = r() * Math.PI * 2;
+      const px = rx * Math.cos(a), py = ry * Math.sin(a);
+      out += `<g transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${rot})">` +
+        `<ellipse rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" stroke-width=".8" opacity=".55"/>` +
+        `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.8" fill="currentColor" stroke="none"/></g>`;
+    }
+    return out;
+  },
+  wave(r) {
+    let out = '';
+    for (let i = 0; i < 4; i++) {
+      const amp = 5 + r() * 9, f = (1 + r() * 2) * Math.PI / 58, p = r() * 6.28, y0 = 18 + i * 14;
+      let d = `M0 ${y0.toFixed(1)}`;
+      for (let x = 4; x <= 120; x += 4) d += ` L${x} ${(y0 + amp * Math.sin(f * x + p)).toFixed(1)}`;
+      out += `<path d="${d}" stroke-width="1" opacity="${(0.45 + i * 0.12).toFixed(2)}"/>`;
+    }
+    return out;
+  },
+  particles(r) {
+    const pts = [];
+    for (let i = 0; i < 22; i++) pts.push([r() * 120, r() * 80]);
+    let out = '';
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+      const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
+      if (d < 26) out += `<line x1="${pts[i][0].toFixed(1)}" y1="${pts[i][1].toFixed(1)}" x2="${pts[j][0].toFixed(1)}" y2="${pts[j][1].toFixed(1)}" stroke-width=".6" opacity="${(1 - d / 26).toFixed(2)}"/>`;
+    }
+    for (const [x, y] of pts) out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.2" fill="currentColor" stroke="none"/>`;
+    return out;
+  },
+  burst(r) {
+    const rot = r() * 1.0, sides = 3 + Math.floor(r() * 4);
+    let out = '';
+    for (let k = 1; k <= 4; k++) {
+      const R = 9 * k + r() * 3;
+      let d = '';
+      for (let s = 0; s <= sides; s++) {
+        const a = rot + (s / sides) * Math.PI * 2;
+        d += (s ? 'L' : 'M') + (60 + R * Math.cos(a)).toFixed(1) + ' ' + (40 + R * Math.sin(a)).toFixed(1);
+      }
+      out += `<path d="${d}" stroke-width=".8" opacity="${(0.25 + k * 0.15).toFixed(2)}"/>`;
+    }
+    for (let s = 0; s < sides + 2; s++) {
+      const a = rot + (s / (sides + 2)) * Math.PI * 2;
+      out += `<line x1="60" y1="40" x2="${(60 + 36 * Math.cos(a)).toFixed(1)}" y2="${(40 + 36 * Math.sin(a)).toFixed(1)}" stroke-width=".6" opacity=".5"/>`;
+    }
+    return out + '<circle cx="60" cy="40" r="2" fill="currentColor" stroke="none"/>';
+  },
+  mesh(r) {
+    const tilt = (r() - 0.5) * 30;
+    let out = '';
+    for (let i = 0; i < 5; i++) {
+      const cy = 18 + i * 11, rx = 46 * Math.sqrt(Math.max(0, 1 - ((cy - 40) / 30) ** 2));
+      out += `<ellipse cx="60" cy="${cy}" rx="${rx.toFixed(1)}" ry="${(rx * 0.22).toFixed(1)}" stroke-width=".7" opacity=".5"/>`;
+    }
+    for (let j = 0; j < 4; j++) {
+      out += `<ellipse cx="60" cy="40" rx="${(46 * Math.cos(j * Math.PI / 4)).toFixed(1)}" ry="32" stroke-width=".7" opacity=".4" transform="rotate(${(tilt + j * 45).toFixed(1)} 60 40)"/>`;
+    }
+    return out;
+  },
+};
+const ART_BY_CAT = { sci: 'orbit', hum: 'wave', lang: 'wave', it: 'particles', math: 'burst', sport: 'mesh', extra: 'mesh', other: 'mesh' };
+const artCache = new Map();
+function artFor(subj) {
+  if (artCache.has(subj.id)) return artCache.get(subj.id);
+  const kind = ART_BY_CAT[subj.cat] || 'mesh';
+  const svg = `<svg class="les-art" viewBox="0 0 120 80" fill="none" stroke="currentColor" aria-hidden="true">${ART[kind](seeded(hashStr(subj.id)))}</svg>`;
+  artCache.set(subj.id, svg);
+  return svg;
+}
+
 function cardHTML(e, ent, half) {
   const idx = RENDER.push(e) - 1;
   const chips = groupChips(e);
@@ -325,6 +420,7 @@ function cardHTML(e, ent, half) {
   const tip = `${e.s.name}${room ? ' · ' + room : ''}${second ? ' · ' + second : ''}`;
   return `<button class="les cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''}"
       data-act="les" data-i="${idx}" type="button" title="${esc(tip)}">
+      ${artFor(e.s)}
       <span class="les-top">
         ${half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
         <span class="les-sub">${esc(e.s.short)}</span>
