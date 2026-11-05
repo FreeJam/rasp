@@ -5,7 +5,8 @@
    ══════════════════════════════════════════════════════════════ */
 'use strict';
 
-const KEY = 'rasp.state.v3';
+const KEY = 'rasp.state.v4';
+const KEY_OLD = 'rasp.state.v3';  // миграция: тема по умолчанию тёмная
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -129,7 +130,14 @@ function saveState() {
 
 function restoreState() {
   let saved = {};
-  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  try {
+    saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!saved) {
+      // прежнее состояние: переносим фильтры и класс, тему сбрасываем на тёмную
+      saved = JSON.parse(localStorage.getItem(KEY_OLD) || '{}') || {};
+      saved.theme = 'dark';
+    }
+  } catch (e) { saved = {}; }
   S = Object.assign(defaultState(), saved);
   S.sel = Object.assign({ class: D.classes[0].id, teacher: D.teachers[0].id, room: D.rooms[0].id }, saved.sel || {});
   S.kinds = Object.assign({ lesson: true, vd: true, ek: true }, saved.kinds || {});
