@@ -5,8 +5,8 @@
    ══════════════════════════════════════════════════════════════ */
 'use strict';
 
-const KEY = 'rasp.state.v4';
-const KEY_OLD = 'rasp.state.v3';  // миграция: тема по умолчанию тёмная
+const KEY = 'rasp.state.v5';
+const KEY_OLD = 'rasp.state.v4';  // миграция: карточки/раскладка v23
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -135,8 +135,11 @@ function restoreState() {
   try {
     saved = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (!saved) {
-      // прежнее состояние: переносим фильтры и класс, тему сбрасываем на тёмную
-      saved = JSON.parse(localStorage.getItem(KEY_OLD) || '{}') || {};
+      saved = JSON.parse(localStorage.getItem(KEY_OLD) || 'null');
+    }
+    if (!saved) {
+      // прежнее состояние v3: переносим фильтры и класс, тему сбрасываем на тёмную
+      saved = JSON.parse(localStorage.getItem('rasp.state.v3') || '{}') || {};
       saved.theme = 'dark';
     }
   } catch (e) { saved = {}; }
@@ -724,27 +727,75 @@ function artFor(subj) {
 function cardHTML(e, ent, half) {
   const idx = RENDER.push(e) - 1;
   const chips = groupChips(e);
-
-  // служебная строка: кабинет первым (его ищут чаще всего), затем учитель/класс
   const room = e.r.map((r) => r.short).join(', ');
-  let second = '';
-  if (ent.type === 'class') second = e.t.map((t) => t.short).join(', ');
-  else if (ent.type === 'teacher') second = clsShort(e.c);
-  else second = e.t.map((t) => t.short).join(', ');
+  const teacher = e.t.map((t) => t.short).join(', ');
+  const cls = clsShort(e.c);
+  const clsFull = e.c.map((c) => c.short).join(', ');
 
-  const tip = `${e.s.name}${room ? ' · ' + room : ''}${second ? ' · ' + second : ''}`;
-  return `<button class="les cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''}"
+  // Режим «Учитель»: порядок строк — класс, предмет, номер кабинета
+  if (ent.type === 'teacher') {
+    const tip = `${clsFull} · ${e.s.name}${room ? ' · ' + room : ''}`;
+    return `<button class="les les--teacher cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''}${half ? ' is-half' : ''}"
+        data-act="les" data-i="${idx}" type="button" title="${esc(tip)}">
+        ${artFor(e.s)}
+        <span class="les-top">
+          ${half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
+          <span class="les-main les-class">${esc(cls)}</span>
+        </span>
+        ${room ? `<span class="les-room les-room--line">${esc(room)}</span>` : ''}
+        <span class="les-sub les-sub--sub">${esc(e.s.short)}</span>
+        ${!half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
+      </button>`;
+  }
+
+  // Режим «Кабинет»: предмет + учитель, кабинет как контекст
+  if (ent.type === 'room') {
+    const tip = `${e.s.name}${teacher ? ' · ' + teacher : ''}${clsFull ? ' · ' + clsFull : ''}`;
+    return `<button class="les les--room cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''}${half ? ' is-half' : ''}"
+        data-act="les" data-i="${idx}" type="button" title="${esc(tip)}">
+        ${artFor(e.s)}
+        <span class="les-top">
+          ${half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
+          <span class="les-sub">${esc(e.s.short)}</span>
+        </span>
+        <span class="les-meta les-meta--stack${half ? ' les-meta--compact' : ''}">
+          ${teacher ? `<span class="les-teacher">${esc(teacher)}</span>` : ''}
+          ${cls ? `<span class="les-cls">${esc(cls)}</span>` : ''}
+          ${!half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
+        </span>
+      </button>`;
+  }
+
+  // Режим «Класс»: обычный урок (не делится) — предмет 2 строки, ФИО, кабинет ниже
+  if (!half) {
+    const tip = `${e.s.name}${teacher ? ' · ' + teacher : ''}${room ? ' · ' + room : ''}`;
+    return `<button class="les les--single cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''}"
+        data-act="les" data-i="${idx}" type="button" title="${esc(tip)}">
+        ${artFor(e.s)}
+        <span class="les-top">
+          <span class="les-sub">${esc(e.s.short)}</span>
+          ${chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
+        </span>
+        <span class="les-body">
+          ${teacher ? `<span class="les-teacher les-teacher--full">${esc(teacher)}</span>` : ''}
+          ${room ? `<span class="les-room les-room--line">${esc(room)}</span>` : ''}
+        </span>
+      </button>`;
+  }
+
+  // Режим «Класс»: урок делится на группы — компактно, шрифт ФИО чуть меньше
+  const tip = `${e.s.name}${teacher ? ' · ' + teacher : ''}${room ? ' · ' + room : ''}`;
+  return `<button class="les les--split cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''} is-half"
       data-act="les" data-i="${idx}" type="button" title="${esc(tip)}">
       ${artFor(e.s)}
       <span class="les-top">
-        ${half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
+        ${chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
         <span class="les-sub">${esc(e.s.short)}</span>
       </span>
-      <span class="les-meta">
+      <span class="les-meta les-meta--compact">
         ${room ? `<span class="les-room">${esc(room)}</span>` : ''}
-        ${room && second ? '<span class="les-sep">·</span>' : ''}
-        ${second ? `<span class="les-teacher">${esc(second)}</span>` : ''}
-        ${!half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
+        ${room && teacher ? '<span class="les-sep">·</span>' : ''}
+        ${teacher ? `<span class="les-teacher les-teacher--small">${esc(teacher)}</span>` : ''}
       </span>
     </button>`;
 }
