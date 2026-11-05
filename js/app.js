@@ -113,7 +113,9 @@ function buildIndexes() {
 /* ── состояние ───────────────────────────────────────────────── */
 function defaultState() {
   const top = Math.max(...Object.keys(D.parallels).map(Number));
-  const first = (D.parallels[String(top)] || [])[0] || D.classes[0].id;
+  // класс по умолчанию: 11 т-2 /1 (мат.инф); если его нет в данных — первый из 11 класса
+  const pref = D.classes.find((c) => c.short === '11 т-2 /1' || c.name === '11 т-2 /1 (мат.инф)');
+  const first = pref ? pref.id : ((D.parallels[String(top)] || [])[0] || D.classes[0].id);
   return {
     mode: 'class',
     sel: { class: first, teacher: D.teachers[0].id, room: D.rooms[0].id },
@@ -139,7 +141,7 @@ function restoreState() {
     }
   } catch (e) { saved = {}; }
   S = Object.assign(defaultState(), saved);
-  S.sel = Object.assign({ class: D.classes[0].id, teacher: D.teachers[0].id, room: D.rooms[0].id }, saved.sel || {});
+  S.sel = Object.assign({ class: defaultState().sel.class, teacher: D.teachers[0].id, room: D.rooms[0].id }, saved.sel || {});
   S.kinds = Object.assign({ lesson: true, vd: true, ek: true }, saved.kinds || {});
   delete S.day;
 
