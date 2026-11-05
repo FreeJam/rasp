@@ -682,6 +682,7 @@ html[data-density="large"] .les-meta { font-size: 12.5px; }
   .nav, .foot, .sheet-wrap, .scrollbar, .toast { display: none !important; }
   .app { max-width: none; padding: 0; }
   .grid-wrap { overflow: visible; border-radius: 0; box-shadow: none; border: 1px solid #ccc; }
+  .grid-wrap.is-scrollable { -webkit-mask-image: none; mask-image: none; }
   .week { min-width: 0; }
   .wk-day, .wk-corner { position: static; }
   .les { break-inside: avoid; }
