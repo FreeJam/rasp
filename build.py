@@ -42,6 +42,20 @@ CATS = (
 )
 
 
+def label_subject(short):
+    """«био (б)» → «Биология (база)» — полное название с пометкой уровня."""
+    import re
+    m = re.match(r"^(.+?)\s*\((б|у)\)$", short or "")
+    if not m:
+        return short
+    base = {"алг": "Алгебра", "био": "Биология", "гео": "География", "геом": "Геометрия",
+            "ин.яз": "Английский", "инф": "Информатика", "ист": "История", "лит-ра": "Литература",
+            "общ": "Обществознание", "стат": "Вероятность и статистика", "физ": "Физика",
+            "хим": "Химия", "рус.яз": "Русский язык"}
+    lvl = "база" if m.group(2) == "б" else "углубленно"
+    name = base.get(m.group(1).strip())
+    return f"{name} ({lvl})" if name else short
+
 def cat_of(name, kind):
     low = name.lower()
     for cat, keys in CATS:
@@ -117,7 +131,7 @@ def main():
         sidx[s.get("id")] = len(subjects)
         subjects.append({
             "id": s.get("id"), "name": nm,
-            "short": clean(s.get("short")) or nm,
+            "short": label_subject(clean(s.get("short")) or nm),
             "kind": kind_of(nm), "cat": cat_of(nm, kind_of(nm)),
         })
 
