@@ -1,0 +1,15 @@
+{
+  "name": "Расписание уроков",
+  "short_name": "Расписание",
+  "description": "Расписание уроков 10–11 классов по классам, учителям и кабинетам",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0F1115",
+  "theme_color": "#0F1115",
+  "lang": "ru",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
