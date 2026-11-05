@@ -322,9 +322,25 @@ function renderPicker() {
 }
 
 /* ── генеративный рисунок предмета ───────────────────────────────
-   Каждый предмет получает свой узор: форма — по направлению (наука → орбиты,
-   гуманитарные → волны, информатика → частицы, математика → лучи, прочее → сетка),
-   а параметры (углы, частоты, точки) — детерминированно из id предмета. */
+   Каждый предмет получает свой тематический рисунок по смыслу предмета:
+   - алгебра/функции → координатные оси и график функции (парабола/кубическая/синусоида)
+   - геометрия/черчение → стереометрия (пирамида/призма, вписанная окружность, сечения)
+   - вероятность/статистика → нормальное распределение (кривая Гаусса) + гистограмма
+   - информатика/Python/ИИ/ИБ → нейросеть / граф алгоритма / бинарная матрица
+   - БЛА (беспилотники) → квадрокоптер / радарная сетка и вектор маршрута
+   - физика/механика → атомные орбитали Бора и векторное поле
+   - химия/биохимия → гексагональные бензольные кольца и структурные связи молекул
+   - биология/генетика/анатомия/медицина → двойная спираль ДНК с поперечными связями
+   - география/экология/туризм → глобус с параллелями, меридианами и розой ветров
+   - история/краеведение/Россия → классический портик с колоннами и лентой времени
+   - литература/русский/риторика/журналистика → раскрытая книга и звуковые/речевые волны
+   - обществознание/право/финансы/предпринимательство → весы правосудия и восходящий тренд
+   - иностранные языки (английский, китайский) → диалоговые волны и орбита коммуникации
+   - физкультура/самбо/ГТО → беговая дорожка стадиона и динамический пульс
+   - шахматы → шахматная перспектива и ход коня
+   - ОБЗР/НВП/первая помощь → щит безопасности, радар и крест первой помощи
+   - театр/проект/самообразование → софиты сцены / компас проекта
+   Параметры каждого рисунка слегка варьируются детерминированно от id предмета. */
 function hashStr(str) {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -339,79 +355,368 @@ function seeded(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+function pickMotif(subj) {
+  const n = (subj.name + ' ' + subj.short).toLowerCase();
+  if (n.includes('алгебр') || n.includes('математич')) return 'algebra';
+  if (n.includes('геометр') || n.includes('черч')) return 'geometry';
+  if (n.includes('вероятн') || n.includes('статист')) return 'stats';
+  if (n.includes('беспилот') || n.includes('бла')) return 'drone';
+  if (n.includes('безопасн') && n.includes('информ')) return 'cyber';
+  if (n.includes('искусствен') || n.includes(' ии')) return 'neural';
+  if (n.includes('информат') || n.includes('python') || n.includes('программир') || n.includes('компьютер')) return 'code';
+  if (n.includes('хими') || n.includes('рхз')) return 'chem';
+  if (n.includes('генетик') || n.includes('биолог') || n.includes('биохим')) return 'dna';
+  if (n.includes('анатом') || n.includes('медиц') || n.includes('сестрин') || n.includes('шаг в мед') || n.includes('помощ') || n.includes('здоров')) return 'med';
+  if (n.includes('механ')) return 'mech';
+  if (n.includes('физик') || n.includes('рфз')) return 'physics';
+  if (n.includes('географ') || n.includes('эколог') || n.includes('туризм') || n.includes('горизонт')) return 'globe';
+  if (n.includes('истор') || n.includes('мой край')) return 'history';
+  if (n.includes('шахмат')) return 'chess';
+  if (n.includes('физкульт') || n.includes('физическая культура') || n.includes('самбо') || n.includes('гто')) return 'sport';
+  if (n.includes('обзр') || n.includes('нвп') || n.includes('военн') || n.includes('защит')) return 'shield';
+  if (n.includes('финанс') || n.includes('предприним') || n.includes('экономик') || n.includes('карьер')) return 'econ';
+  if (n.includes('обществ') || n.includes('право') || n.includes('познан') || n.includes('педагог') || n.includes('психол') || n.includes('сем')) return 'society';
+  if (n.includes('театр')) return 'theater';
+  if (n.includes('англ') || n.includes('кит') || n.includes('иностр') || n.includes('востоковед')) return 'lang';
+  if (n.includes('литерат') || n.includes('русский') || n.includes('рус.яз') || n.includes('риторик') || n.includes('журнал')) return 'lit';
+  return ART_BY_CAT[subj.cat] || 'compass';
+}
+
 const ART = {
-  orbit(r) {
-    const cx = 60 + (r() - 0.5) * 16, cy = 40 + (r() - 0.5) * 10;
-    let out = `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.2" fill="currentColor"/>`;
-    const n = 2 + Math.floor(r() * 2);
-    for (let i = 0; i < n; i++) {
-      const rx = 16 + i * 13 + r() * 5, ry = rx * (0.3 + r() * 0.35);
-      const rot = (r() * 180).toFixed(1), a = r() * Math.PI * 2;
-      const px = rx * Math.cos(a), py = ry * Math.sin(a);
-      out += `<g transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${rot})">` +
-        `<ellipse rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" stroke-width=".8" opacity=".55"/>` +
-        `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.8" fill="currentColor" stroke="none"/></g>`;
+  // Алгебра: координатная сетка, плавные графики функций и узлы пересечений
+  algebra(r) {
+    const shift = (r() - 0.5) * 14;
+    let out = `<line x1="12" y1="62" x2="112" y2="62" stroke-width=".6" opacity=".35"/>` +
+              `<line x1="34" y1="8" x2="34" y2="74" stroke-width=".6" opacity=".35"/>`;
+    // парабола / кубическая кривая
+    let d1 = '', d2 = '';
+    for (let x = 10; x <= 114; x += 4) {
+      const t = (x - 58 + shift) / 28;
+      const y1 = 54 - 28 * Math.exp(-t * t * 0.9) * Math.cos(t * 1.4);
+      const y2 = 42 + 18 * Math.sin(t * 1.6 + r() * 0.4);
+      d1 += (x === 10 ? 'M' : 'L') + `${x} ${y1.toFixed(1)} `;
+      d2 += (x === 10 ? 'M' : 'L') + `${x} ${y2.toFixed(1)} `;
+    }
+    out += `<path d="${d1}" stroke-width="1.15" opacity=".75"/>`;
+    out += `<path d="${d2}" stroke-width=".75" stroke-dasharray="2.5 2" opacity=".45"/>`;
+    out += `<circle cx="${(58 - shift).toFixed(1)}" cy="26" r="2.4" fill="currentColor" stroke="none"/>`;
+    out += `<circle cx="34" cy="62" r="1.6" fill="currentColor" stroke="none" opacity=".6"/>`;
+    return out;
+  },
+  // Геометрия: 3D-пирамида/октаэдр, вписанная окружность и сечение
+  geometry(r) {
+    const rot = (r() - 0.5) * 12;
+    return `<g transform="translate(68 40) rotate(${rot.toFixed(1)})">` +
+      `<circle cx="0" cy="2" r="28" stroke-width=".65" stroke-dasharray="3 2.5" opacity=".4"/>` +
+      `<polygon points="0,-26 -30,18 28,22" stroke-width="1.1" opacity=".78"/>` +
+      `<polygon points="0,-26 28,22 38,-4" stroke-width=".85" opacity=".55"/>` +
+      `<line x1="-30" y1="18" x2="38" y2="-4" stroke-width=".65" stroke-dasharray="2.5 2.5" opacity=".45"/>` +
+      `<line x1="0" y1="-26" x2="4" y2="10" stroke-width=".7" opacity=".45"/>` +
+      `<circle cx="0" cy="-26" r="2" fill="currentColor" stroke="none"/>` +
+      `<circle cx="-30" cy="18" r="1.8" fill="currentColor" stroke="none"/>` +
+      `<circle cx="28" cy="22" r="1.8" fill="currentColor" stroke="none"/>` +
+      `<circle cx="38" cy="-4" r="1.6" fill="currentColor" stroke="none"/></g>`;
+  },
+  // Вероятность и статистика: кривая Гаусса + столбики распределения
+  stats(r) {
+    let out = '';
+    const bars = [14, 24, 38, 50, 42, 28, 16, 9];
+    bars.forEach((h, i) => {
+      const x = 18 + i * 11, bh = h * (0.85 + r() * 0.25);
+      out += `<rect x="${x}" y="${(68 - bh).toFixed(1)}" width="7" height="${bh.toFixed(1)}" stroke-width=".65" opacity=".38"/>`;
+    });
+    let d = '';
+    for (let x = 10; x <= 112; x += 3) {
+      const z = (x - 56) / 20;
+      const y = 68 - 48 * Math.exp(-0.5 * z * z);
+      d += (x === 10 ? 'M' : 'L') + `${x} ${y.toFixed(1)} `;
+    }
+    out += `<path d="${d}" stroke-width="1.2" opacity=".82"/>`;
+    out += `<line x1="56" y1="18" x2="56" y2="68" stroke-width=".7" stroke-dasharray="2 2" opacity=".5"/>`;
+    out += `<circle cx="56" cy="20" r="2.2" fill="currentColor" stroke="none"/>`;
+    return out;
+  },
+  // Информатика / код: граф узлов + дорожки печатной платы / дерева
+  code(r) {
+    const nodes = [
+      [26, 22], [26, 46], [26, 66],
+      [58, 16], [58, 38], [58, 60],
+      [92, 26], [92, 52], [110, 38]
+    ];
+    const edges = [[0,3],[0,4],[1,3],[1,4],[1,5],[2,4],[2,5],[3,6],[4,6],[4,7],[5,7],[6,8],[7,8]];
+    let out = '';
+    for (const [a, b] of edges) {
+      const [x1, y1] = nodes[a], [x2, y2] = nodes[b];
+      const mx = ((x1 + x2) / 2).toFixed(1);
+      out += `<path d="M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" stroke-width=".75" opacity="${(0.32 + r() * 0.35).toFixed(2)}"/>`;
+    }
+    for (const [x, y] of nodes) {
+      out += `<circle cx="${x}" cy="${y}" r="2.6" fill="var(--surface)" stroke="currentColor" stroke-width="1.1"/>`;
+      out += `<circle cx="${x}" cy="${y}" r="1.1" fill="currentColor" stroke="none"/>`;
     }
     return out;
   },
-  wave(r) {
+  // ИИ / нейросеть: многослойный перцептрон с импульсами
+  neural(r) {
+    const layers = [[22, [20, 40, 60]], [54, [14, 31, 49, 66]], [86, [22, 40, 58]], [110, [40]]];
     let out = '';
-    for (let i = 0; i < 4; i++) {
-      const amp = 5 + r() * 9, f = (1 + r() * 2) * Math.PI / 58, p = r() * 6.28, y0 = 18 + i * 14;
-      let d = `M0 ${y0.toFixed(1)}`;
-      for (let x = 4; x <= 120; x += 4) d += ` L${x} ${(y0 + amp * Math.sin(f * x + p)).toFixed(1)}`;
-      out += `<path d="${d}" stroke-width="1" opacity="${(0.45 + i * 0.12).toFixed(2)}"/>`;
-    }
-    return out;
-  },
-  particles(r) {
-    const pts = [];
-    for (let i = 0; i < 22; i++) pts.push([r() * 120, r() * 80]);
-    let out = '';
-    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
-      const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
-      if (d < 26) out += `<line x1="${pts[i][0].toFixed(1)}" y1="${pts[i][1].toFixed(1)}" x2="${pts[j][0].toFixed(1)}" y2="${pts[j][1].toFixed(1)}" stroke-width=".6" opacity="${(1 - d / 26).toFixed(2)}"/>`;
-    }
-    for (const [x, y] of pts) out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.2" fill="currentColor" stroke="none"/>`;
-    return out;
-  },
-  burst(r) {
-    const rot = r() * 1.0, sides = 3 + Math.floor(r() * 4);
-    let out = '';
-    for (let k = 1; k <= 4; k++) {
-      const R = 9 * k + r() * 3;
-      let d = '';
-      for (let s = 0; s <= sides; s++) {
-        const a = rot + (s / sides) * Math.PI * 2;
-        d += (s ? 'L' : 'M') + (60 + R * Math.cos(a)).toFixed(1) + ' ' + (40 + R * Math.sin(a)).toFixed(1);
+    for (let l = 0; l < layers.length - 1; l++) {
+      const [x1, ys1] = layers[l], [x2, ys2] = layers[l + 1];
+      for (const y1 of ys1) for (const y2 of ys2) {
+        out += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width=".65" opacity="${(0.22 + r() * 0.38).toFixed(2)}"/>`;
       }
-      out += `<path d="${d}" stroke-width=".8" opacity="${(0.25 + k * 0.15).toFixed(2)}"/>`;
     }
-    for (let s = 0; s < sides + 2; s++) {
-      const a = rot + (s / (sides + 2)) * Math.PI * 2;
-      out += `<line x1="60" y1="40" x2="${(60 + 36 * Math.cos(a)).toFixed(1)}" y2="${(40 + 36 * Math.sin(a)).toFixed(1)}" stroke-width=".6" opacity=".5"/>`;
-    }
-    return out + '<circle cx="60" cy="40" r="2" fill="currentColor" stroke="none"/>';
-  },
-  mesh(r) {
-    const tilt = (r() - 0.5) * 30;
-    let out = '';
-    for (let i = 0; i < 5; i++) {
-      const cy = 18 + i * 11, rx = 46 * Math.sqrt(Math.max(0, 1 - ((cy - 40) / 30) ** 2));
-      out += `<ellipse cx="60" cy="${cy}" rx="${rx.toFixed(1)}" ry="${(rx * 0.22).toFixed(1)}" stroke-width=".7" opacity=".5"/>`;
-    }
-    for (let j = 0; j < 4; j++) {
-      out += `<ellipse cx="60" cy="40" rx="${(46 * Math.cos(j * Math.PI / 4)).toFixed(1)}" ry="32" stroke-width=".7" opacity=".4" transform="rotate(${(tilt + j * 45).toFixed(1)} 60 40)"/>`;
+    for (const [x, ys] of layers) for (const y of ys) {
+      out += `<circle cx="${x}" cy="${y}" r="2.4" fill="currentColor" stroke="none" opacity=".85"/>`;
     }
     return out;
+  },
+  // Инф. безопасность: кибер-щит + концентрический радар и узлы
+  cyber(r) {
+    const a = (r() * 360).toFixed(0);
+    return `<g transform="translate(68 40)">` +
+      `<circle r="30" stroke-width=".6" stroke-dasharray="3 3" opacity=".38"/>` +
+      `<circle r="21" stroke-width=".6" opacity=".32"/>` +
+      `<path d="M0 -22 L18 -14 L18 2 C18 14 9 22 0 26 C-9 22 -18 14 -18 2 L-18 -14 Z" stroke-width="1.1" opacity=".78"/>` +
+      `<rect x="-6" y="-4" width="12" height="10" stroke-width=".9" opacity=".75"/>` +
+      `<path d="M-3.5 -4 V-7.5 A3.5 3.5 0 0 1 3.5 -7.5 V-4" stroke-width=".9" opacity=".75"/>` +
+      `<line x1="0" y1="0" x2="26" y2="-14" transform="rotate(${a})" stroke-width=".7" opacity=".45"/>` +
+      `</g>`;
+  },
+  // БЛА (беспилотники): схема квадрокоптера + радарная сетка
+  drone(r) {
+    const rot = ((r() - 0.5) * 16).toFixed(1);
+    return `<g transform="translate(68 40) rotate(${rot})">` +
+      `<circle r="30" stroke-width=".55" stroke-dasharray="2 3" opacity=".35"/>` +
+      `<line x1="-18" y1="-16" x2="18" y2="16" stroke-width="1" opacity=".7"/>` +
+      `<line x1="-18" y1="16" x2="18" y2="-16" stroke-width="1" opacity=".7"/>` +
+      `<polygon points="0,-7 6,0 0,7 -6,0" stroke-width="1" opacity=".8"/>` +
+      `<circle cx="-18" cy="-16" r="8" stroke-width=".85" opacity=".72"/>` +
+      `<circle cx="18" cy="-16" r="8" stroke-width=".85" opacity=".72"/>` +
+      `<circle cx="-18" cy="16" r="8" stroke-width=".85" opacity=".72"/>` +
+      `<circle cx="18" cy="16" r="8" stroke-width=".85" opacity=".72"/>` +
+      `<circle cx="-18" cy="-16" r="1.6" fill="currentColor" stroke="none"/>` +
+      `<circle cx="18" cy="-16" r="1.6" fill="currentColor" stroke="none"/>` +
+      `<circle cx="-18" cy="16" r="1.6" fill="currentColor" stroke="none"/>` +
+      `<circle cx="18" cy="16" r="1.6" fill="currentColor" stroke="none"/></g>`;
+  },
+  // Физика: атомные орбитали Бора с электронами
+  physics(r) {
+    const cx = 66, cy = 40;
+    let out = `<circle cx="${cx}" cy="${cy}" r="3.4" fill="currentColor" stroke="none"/>`;
+    for (let i = 0; i < 3; i++) {
+      const rot = i * 60 + (r() - 0.5) * 18;
+      const a = r() * Math.PI * 2;
+      const rx = 30, ry = 10.5;
+      const px = (rx * Math.cos(a)).toFixed(1), py = (ry * Math.sin(a)).toFixed(1);
+      out += `<g transform="translate(${cx} ${cy}) rotate(${rot.toFixed(1)})">` +
+        `<ellipse rx="${rx}" ry="${ry}" stroke-width=".85" opacity=".62"/>` +
+        `<circle cx="${px}" cy="${py}" r="2" fill="currentColor" stroke="none"/></g>`;
+    }
+    return out;
+  },
+  // Прикладная механика: зацепление шестерён и векторы сил
+  mech(r) {
+    let out = `<g transform="translate(58 40)">` +
+      `<circle r="18" stroke-width="1" opacity=".75"/>` +
+      `<circle r="7" stroke-width=".9" opacity=".7"/>`;
+    for (let i = 0; i < 8; i++) {
+      const a = i * 45;
+      out += `<line x1="18" y1="0" x2="23" y2="0" stroke-width="2.2" transform="rotate(${a})" opacity=".7"/>`;
+    }
+    out += `</g><g transform="translate(92 27)">` +
+      `<circle r="10" stroke-width=".85" opacity=".6"/>` +
+      `<circle r="3.5" fill="currentColor" stroke="none" opacity=".6"/>`;
+    for (let i = 0; i < 6; i++) {
+      out += `<line x1="10" y1="0" x2="13.5" y2="0" stroke-width="1.8" transform="rotate(${i * 60 + 15})" opacity=".6"/>`;
+    }
+    return out + `</g>`;
+  },
+  // Химия: сопряжённые гексагональные бензольные кольца и связи
+  chem(r) {
+    const hex = (cx, cy, R, ring) => {
+      let pts = '';
+      for (let i = 0; i < 6; i++) {
+        const a = (Math.PI / 6) + i * (Math.PI / 3);
+        pts += `${(cx + R * Math.cos(a)).toFixed(1)},${(cy + R * Math.sin(a)).toFixed(1)} `;
+      }
+      let s = `<polygon points="${pts.trim()}" stroke-width="1" opacity=".75"/>`;
+      if (ring) s += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(R * 0.52).toFixed(1)}" stroke-width=".75" stroke-dasharray="3 2" opacity=".55"/>`;
+      return s;
+    };
+    const R = 16, dx = R * Math.sqrt(3);
+    let out = hex(52, 42, R, true) + hex(52 + dx, 42, R, false);
+    out += `<line x1="38" y1="34" x2="24" y2="26" stroke-width=".9" opacity=".65"/>`;
+    out += `<circle cx="23" cy="25" r="2.4" fill="currentColor" stroke="none"/>`;
+    out += `<line x1="${(52 + dx + 14).toFixed(1)}" y1="34" x2="${(52 + dx + 26).toFixed(1)}" y2="26" stroke-width=".9" opacity=".65"/>`;
+    out += `<circle cx="${(52 + dx + 27).toFixed(1)}" cy="25" r="2.4" fill="currentColor" stroke="none"/>`;
+    out += `<circle cx="52" cy="26" r="1.9" fill="currentColor" stroke="none"/>`;
+    return out;
+  },
+  // Биология и генетика: двойная спираль ДНК с водородными мостиками
+  dna(r) {
+    const ph = r() * 1.5;
+    let d1 = '', d2 = '', rungs = '';
+    for (let x = 14; x <= 112; x += 4) {
+      const a = (x - 14) * 0.085 + ph;
+      const y1 = 40 + 18 * Math.sin(a);
+      const y2 = 40 - 18 * Math.sin(a);
+      d1 += (x === 14 ? 'M' : 'L') + `${x} ${y1.toFixed(1)} `;
+      d2 += (x === 14 ? 'M' : 'L') + `${x} ${y2.toFixed(1)} `;
+      if (x % 12 === 2) {
+        rungs += `<line x1="${x}" y1="${y1.toFixed(1)}" x2="${x}" y2="${y2.toFixed(1)}" stroke-width=".7" opacity=".42"/>`;
+        rungs += `<circle cx="${x}" cy="${y1.toFixed(1)}" r="1.5" fill="currentColor" stroke="none"/>`;
+        rungs += `<circle cx="${x}" cy="${y2.toFixed(1)}" r="1.5" fill="currentColor" stroke="none"/>`;
+      }
+    }
+    return rungs + `<path d="${d1}" stroke-width="1.15" opacity=".78"/>` + `<path d="${d2}" stroke-width="1.15" opacity=".58"/>`;
+  },
+  // Медицина / анатомия / первая помощь: линия ЭКГ-кардиограммы + медицинский крест
+  med() {
+    return `<path d="M8 44 L34 44 L41 30 L48 58 L56 16 L64 62 L71 36 L77 44 L114 44" stroke-width="1.2" opacity=".82"/>` +
+      `<g transform="translate(96 22)" opacity=".6">` +
+      `<path d="M-3 -8 H3 V-3 H8 V3 H3 V8 H-3 V3 H-8 V-3 H-3 Z" stroke-width=".9"/></g>` +
+      `<circle cx="56" cy="16" r="2" fill="currentColor" stroke="none"/>`;
+  },
+  // География / экология / туризм: земной шар с параллелями, меридианами и орбитой
+  globe(r) {
+    const tilt = -16 + (r() - 0.5) * 12;
+    return `<g transform="translate(68 40) rotate(${tilt.toFixed(1)})">` +
+      `<circle r="26" stroke-width="1.05" opacity=".75"/>` +
+      `<ellipse rx="13" ry="26" stroke-width=".75" opacity=".55"/>` +
+      `<line x1="0" y1="-26" x2="0" y2="26" stroke-width=".7" opacity=".5"/>` +
+      `<line x1="-26" y1="0" x2="26" y2="0" stroke-width=".8" opacity=".6"/>` +
+      `<ellipse cx="0" cy="-12" rx="23" ry="4.5" stroke-width=".65" opacity=".45"/>` +
+      `<ellipse cx="0" cy="12" rx="23" ry="4.5" stroke-width=".65" opacity=".45"/>` +
+      `<ellipse rx="34" ry="9" stroke-width=".65" stroke-dasharray="3 2" opacity=".42"/>` +
+      `<circle cx="34" cy="0" r="2" fill="currentColor" stroke="none"/></g>`;
+  },
+  // История: античный фронтон и колоннада + лента времени
+  history() {
+    return `<g transform="translate(68 42)">` +
+      `<polygon points="-32,-10 0,-26 32,-10" stroke-width="1.05" opacity=".78"/>` +
+      `<line x1="-35" y1="-7" x2="35" y2="-7" stroke-width=".85" opacity=".65"/>` +
+      `<line x1="-24" y1="-7" x2="-24" y2="18" stroke-width="1.3" opacity=".65"/>` +
+      `<line x1="-8" y1="-7" x2="-8" y2="18" stroke-width="1.3" opacity=".65"/>` +
+      `<line x1="8" y1="-7" x2="8" y2="18" stroke-width="1.3" opacity=".65"/>` +
+      `<line x1="24" y1="-7" x2="24" y2="18" stroke-width="1.3" opacity=".65"/>` +
+      `<line x1="-34" y1="18" x2="34" y2="18" stroke-width="1" opacity=".7"/>` +
+      `<line x1="-38" y1="22" x2="38" y2="22" stroke-width=".8" opacity=".5"/></g>`;
+  },
+  // Литература / Русский язык / Риторика: раскрытая книга и плавные речевые волны
+  lit(r) {
+    let waves = '';
+    for (let i = 0; i < 3; i++) {
+      const amp = 5 + i * 3, p = r() * 2 + i * 0.9, y0 = 24 + i * 10;
+      let d = `M8 ${y0}`;
+      for (let x = 12; x <= 116; x += 4) d += ` L${x} ${(y0 + amp * Math.sin(x * 0.075 + p)).toFixed(1)}`;
+      waves += `<path d="${d}" stroke-width=".75" opacity="${(0.32 + i * 0.14).toFixed(2)}"/>`;
+    }
+    return waves + `<g transform="translate(72 48)">` +
+      `<path d="M0 -14 C-10 -18 -22 -17 -30 -12 V12 C-22 7 -10 6 0 11 C10 6 22 7 30 12 V-12 C22 -17 10 -18 0 -14 Z" stroke-width="1.05" opacity=".78"/>` +
+      `<line x1="0" y1="-14" x2="0" y2="11" stroke-width=".9" opacity=".75"/></g>`;
+  },
+  // Иностранные языки: пересекающиеся диалоговые сферы и звуковые волны
+  lang(r) {
+    let out = `<g transform="translate(66 38)">` +
+      `<circle cx="-12" cy="0" r="19" stroke-width=".95" opacity=".7"/>` +
+      `<circle cx="12" cy="0" r="19" stroke-width=".95" opacity=".65"/>` +
+      `<ellipse cx="-12" cy="0" rx="9" ry="19" stroke-width=".6" opacity=".4"/>` +
+      `<ellipse cx="12" cy="0" rx="9" ry="19" stroke-width=".6" opacity=".4"/>` +
+      `<line x1="-31" y1="0" x2="31" y2="0" stroke-width=".65" opacity=".45"/>` +
+      `<circle cx="0" cy="-14" r="2" fill="currentColor" stroke="none"/>` +
+      `<circle cx="0" cy="14" r="2" fill="currentColor" stroke="none"/></g>`;
+    const y0 = 64 + (r() - 0.5) * 4;
+    out += `<path d="M16 ${y0.toFixed(1)} Q42 ${(y0 - 10).toFixed(1)} 66 ${y0.toFixed(1)} T114 ${y0.toFixed(1)}" stroke-width=".75" opacity=".45"/>`;
+    return out;
+  },
+  // Обществознание / право / психология: весы баланса и социальный граф
+  society() {
+    return `<g transform="translate(68 40)">` +
+      `<line x1="0" y1="-24" x2="0" y2="24" stroke-width="1.1" opacity=".75"/>` +
+      `<line x1="-14" y1="24" x2="14" y2="24" stroke-width="1.1" opacity=".75"/>` +
+      `<line x1="-26" y1="-14" x2="26" y2="-14" stroke-width="1" opacity=".78"/>` +
+      `<circle cx="0" cy="-24" r="2.4" fill="currentColor" stroke="none"/>` +
+      `<path d="M-26 -14 L-33 4 L-19 4 Z" stroke-width=".85" opacity=".68"/>` +
+      `<path d="M26 -14 L19 4 L33 4 Z" stroke-width=".85" opacity=".68"/>` +
+      `<path d="M-34 4 A8 5 0 0 0 -18 4" stroke-width="1" opacity=".78"/>` +
+      `<path d="M18 4 A8 5 0 0 0 34 4" stroke-width="1" opacity=".78"/></g>`;
+  },
+  // Экономика / финансы / предпринимательство: восходящий тренд, свечи и сетка
+  econ() {
+    return `<line x1="16" y1="64" x2="112" y2="64" stroke-width=".65" opacity=".4"/>` +
+      `<rect x="24" y="48" width="8" height="16" stroke-width=".75" opacity=".45"/>` +
+      `<rect x="42" y="38" width="8" height="26" stroke-width=".75" opacity=".5"/>` +
+      `<rect x="60" y="42" width="8" height="22" stroke-width=".75" opacity=".5"/>` +
+      `<rect x="78" y="28" width="8" height="36" stroke-width=".75" opacity=".6"/>` +
+      `<rect x="96" y="18" width="8" height="46" stroke-width=".85" opacity=".7"/>` +
+      `<path d="M20 52 L44 34 L62 39 L82 22 L104 12" stroke-width="1.3" opacity=".88"/>` +
+      `<polyline points="96,11 105,11 105,20" stroke-width="1.2" opacity=".88"/>` +
+      `<circle cx="44" cy="34" r="2" fill="currentColor" stroke="none"/>` +
+      `<circle cx="82" cy="22" r="2" fill="currentColor" stroke="none"/>`;
+  },
+  // Физкультура / спорт / ГТО / самбо: виражи стадиона и динамические кольца
+  sport() {
+    return `<g transform="translate(66 40) rotate(-12)">` +
+      `<rect x="-36" y="-18" width="72" height="36" rx="18" ry="18" stroke-width="1" opacity=".75"/>` +
+      `<rect x="-29" y="-12" width="58" height="24" rx="12" ry="12" stroke-width=".75" opacity=".52"/>` +
+      `<rect x="-22" y="-6" width="44" height="12" rx="6" ry="6" stroke-width=".6" opacity=".38"/>` +
+      `<line x1="0" y1="-18" x2="0" y2="18" stroke-width=".65" stroke-dasharray="2 2" opacity=".45"/>` +
+      `<circle cx="24" cy="-12" r="2.2" fill="currentColor" stroke="none"/>` +
+      `<circle cx="-18" cy="12" r="1.8" fill="currentColor" stroke="none"/></g>`;
+  },
+  // Шахматы: перспектива доски + траектория хода коня
+  chess() {
+    let out = `<g transform="translate(66 42)">`;
+    for (let i = -2; i <= 2; i++) {
+      out += `<line x1="${i * 12}" y1="-22" x2="${i * 16}" y2="22" stroke-width=".65" opacity=".45"/>`;
+    }
+    for (let j = -2; j <= 2; j++) {
+      const y = j * 11, w = 26 + (j + 2) * 3;
+      out += `<line x1="${-w}" y1="${y}" x2="${w}" y2="${y}" stroke-width=".65" opacity=".45"/>`;
+    }
+    out += `<polyline points="-12,11 -12,-11 12,-11" stroke-width="1.3" opacity=".88"/>` +
+      `<circle cx="-12" cy="11" r="2.4" fill="currentColor" stroke="none"/>` +
+      `<circle cx="-12" cy="-11" r="2" fill="currentColor" stroke="none"/>` +
+      `<circle cx="12" cy="-11" r="2.6" fill="currentColor" stroke="none"/></g>`;
+    return out;
+  },
+  // ОБЗР / НВП: щит и роза ветров / радар безопасности
+  shield() {
+    return `<g transform="translate(68 40)">` +
+      `<circle r="27" stroke-width=".6" stroke-dasharray="3 2.5" opacity=".38"/>` +
+      `<path d="M0 -24 L20 -15 L20 2 C20 15 10 23 0 28 C-10 23 -20 15 -20 2 L-20 -15 Z" stroke-width="1.15" opacity=".78"/>` +
+      `<polygon points="0,-15 4,-4 15,0 4,4 0,15 -4,4 -15,0 -4,-4" stroke-width=".85" opacity=".68"/>` +
+      `<circle cx="0" cy="0" r="2.2" fill="currentColor" stroke="none"/></g>`;
+  },
+  // Театр: лучи софитов и арка сцены
+  theater() {
+    return `<g transform="translate(66 40)">` +
+      `<path d="M-34 -24 Q0 -12 34 -24" stroke-width="1.1" opacity=".75"/>` +
+      `<path d="M-34 -24 Q-20 4 -32 24" stroke-width="1" opacity=".68"/>` +
+      `<path d="M34 -24 Q20 4 32 24" stroke-width="1" opacity=".68"/>` +
+      `<polygon points="-18,-22 -28,22 2,22" stroke-width=".65" opacity=".38"/>` +
+      `<polygon points="18,-22 -2,22 28,22" stroke-width=".65" opacity=".38"/>` +
+      `<line x1="-36" y1="22" x2="36" y2="22" stroke-width=".95" opacity=".7"/></g>`;
+  },
+  // Индивидуальный проект / самоподготовка / общее: астролябия и вектор цели
+  compass(r) {
+    const rot = (r() * 45).toFixed(1);
+    return `<g transform="translate(68 40) rotate(${rot})">` +
+      `<circle r="25" stroke-width=".85" opacity=".62"/>` +
+      `<circle r="17" stroke-width=".6" stroke-dasharray="2.5 2.5" opacity=".45"/>` +
+      `<polygon points="0,-22 5,-5 22,0 5,5 0,22 -5,5 -22,0 -5,-5" stroke-width=".95" opacity=".75"/>` +
+      `<circle r="2.4" fill="currentColor" stroke="none"/></g>`;
   },
 };
-const ART_BY_CAT = { sci: 'orbit', hum: 'wave', lang: 'wave', it: 'particles', math: 'burst', sport: 'mesh', extra: 'mesh', other: 'mesh' };
+const ART_BY_CAT = { sci: 'physics', hum: 'lit', lang: 'lang', it: 'code', math: 'algebra', sport: 'sport', extra: 'compass', other: 'compass' };
 const artCache = new Map();
 function artFor(subj) {
   if (artCache.has(subj.id)) return artCache.get(subj.id);
-  const kind = ART_BY_CAT[subj.cat] || 'mesh';
-  const svg = `<svg class="les-art" viewBox="0 0 120 80" fill="none" stroke="currentColor" aria-hidden="true">${ART[kind](seeded(hashStr(subj.id)))}</svg>`;
+  const kind = pickMotif(subj);
+  const fn = ART[kind] || ART.compass;
+  const svg = `<svg class="les-art" viewBox="0 0 120 80" fill="none" stroke="currentColor" aria-hidden="true">${fn(seeded(hashStr(subj.id)))}</svg>`;
   artCache.set(subj.id, svg);
   return svg;
 }
@@ -461,14 +766,8 @@ function usedPeriods() {
   return max ? D.meta.periods.filter((p) => p.n <= max) : [];
 }
 
-// высота таблицы — по окну, чтобы заголовки могли липнуть при вертикальной прокрутке
-function fitWrap() {
-  const bar = $('.bar');
-  const barH = bar ? bar.getBoundingClientRect().height : 0;
-  const h = Math.max(300, Math.round(window.innerHeight - barH - 28));
-  document.documentElement.style.setProperty('--wrap-h', h + 'px');
-}
-window.addEventListener('resize', () => { fitWrap(); });
+// таблица растягивается по странице без собственной вертикальной прокрутки
+function fitWrap() {}
 
 function renderBoard() {
   const ent = entity();
@@ -489,7 +788,7 @@ function renderBoard() {
     return c;
   });
 
-  // колонки, где бывают только ВД/ЭК, делаем уже: там короткие названия
+  // колонки, где бывают только ВД/ЭК, делаем чуть компактнее: там короткие названия
   const extraCol = (n2) => {
     let any = false;
     for (let d = 0; d < 5; d++) {
@@ -501,7 +800,7 @@ function renderBoard() {
     return any;
   };
   const cols = periods
-    .map((p) => (extraCol(p.n) ? 'minmax(92px, .8fr)' : 'minmax(120px, 1fr)'))
+    .map((p) => (extraCol(p.n) ? 'minmax(112px, .85fr)' : 'minmax(136px, 1fr)'))
     .join(' ');
 
   let html = `<div class="print-head"><strong>${esc(ent.name)}</strong> — неделя</div>`;
@@ -512,7 +811,7 @@ function renderBoard() {
     const now = n.cur && n.cur.n === p.n;
     html += `<div class="wk-ph ${now ? 'is-now' : ''} ${extraCol(p.n) ? 'is-extra' : ''}"
       style="grid-row:1;grid-column:${j + 2}" data-timenum="${p.n}" data-col="${j + 2}">
-      <b>${p.n}</b><span>${fmtTime(p.start)}-${fmtTime(p.end)}</span>${now ? '<i class="live-tag">live</i>' : ''}</div>`;
+      <b>${p.n}</b><span>${fmtTime(p.start)}–${fmtTime(p.end)}</span>${now ? '<i class="live-tag">live</i>' : ''}</div>`;
   });
 
   D.meta.days.forEach((d, i) => {
@@ -521,9 +820,10 @@ function renderBoard() {
     // полоса дня: широкий фон под плитками
     html += `<div class="lane ${isToday ? 'is-today' : ''}" style="grid-row:${row};grid-column:2/-1" aria-hidden="true"></div>`;
     html += `<div class="wk-day ${isToday ? 'is-today' : ''}" style="grid-row:${row};grid-column:1" data-day="${d.i}">
-      <b>${d.short}</b>
-      <span>${counts[d.i]}<em>${plural(counts[d.i], ' урок', ' урока', ' уроков')}</em></span>
-      ${isToday ? '<i class="today-tag">сегодня</i>' : ''}</div>`;
+      <span class="wk-day-top"><b>${d.short}</b>${isToday ? '<i class="today-tag">сегодня</i>' : ''}</span>
+      <em class="wk-day-full">${esc(d.full)}</em>
+      <span class="wk-day-cnt">${counts[d.i]}<em>${plural(counts[d.i], ' урок', ' урока', ' уроков')}</em></span>
+    </div>`;
     periods.forEach((p, j) => {
       const list = visibleEntries(cellsFor(d.i)[String(p.n)]);
       html += `<div class="wk-cell ${list.length ? '' : 'is-empty'} ${p.n % 2 === 0 ? 'is-alt' : ''}"
@@ -535,11 +835,10 @@ function renderBoard() {
   html += `</div></div>`;
   board.innerHTML = html;
   markNow(n);
-  fitWrap();
   const gw = $('.grid-wrap');
   if (gw) {
     gw.classList.toggle('is-scrollable', gw.scrollWidth > gw.clientWidth + 4);
-    // подводим к текущему уроку, если он за краем
+    // подводим к текущему уроку, если он за краем на узком экране
     const cur = nowInfo();
     if (cur.cur && window.matchMedia('(max-width: 900px)').matches) {
       const cell = gw.querySelector(`.wk-cell[data-slot="${cur.day}-${cur.cur.n}"]`);
