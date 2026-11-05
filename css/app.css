@@ -270,7 +270,8 @@ html[data-theme="light"] body::after { opacity: .18; mix-blend-mode: multiply; }
 /* ── доска ─────────────────────────────────────────────────────── */
 .grid-wrap {
   position: relative;
-  overflow-x: auto; overflow-y: hidden;
+  max-height: var(--wrap-h, 70dvh); min-height: 300px;
+  overflow: auto; overscroll-behavior: contain;
   background: var(--bg);
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -283,7 +284,7 @@ html[data-theme="light"] body::after { opacity: .18; mix-blend-mode: multiply; }
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent 100%);
   mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent 100%);
 }
-.grid-wrap::-webkit-scrollbar { height: 6px; }
+.grid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
 .grid-wrap::-webkit-scrollbar-thumb { background: var(--line-2); }
 .grid-wrap::-webkit-scrollbar-track { background: transparent; }
 
@@ -857,3 +858,15 @@ html[data-theme="light"] .les {
 }
 html[data-theme="light"] .les::before { height: 4px; }
 html[data-theme="light"] .les::after { height: 3px; width: 34px; }
+
+
+/* ── закреплённые заголовки таблицы: номера/время уроков и дни ─── */
+.wk-ph { position: sticky; top: 0; z-index: 5; }
+.wk-corner { position: sticky; top: 0; left: 0; z-index: 6; }
+.wk-day { z-index: 4; }
+.wk-corner, .wk-ph { box-shadow: 0 1px 0 var(--line), 0 10px 18px -12px rgba(0,0,0,.6); }
+html[data-theme="light"] .wk-corner, html[data-theme="light"] .wk-ph { box-shadow: 0 1px 0 var(--line), 0 8px 14px -12px rgba(11,14,20,.25); }
+@media print {
+  .wk-ph { position: static; }
+  .grid-wrap { max-height: none; min-height: 0; overflow: visible; }
+}

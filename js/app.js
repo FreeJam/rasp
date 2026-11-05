@@ -459,6 +459,15 @@ function usedPeriods() {
   return max ? D.meta.periods.filter((p) => p.n <= max) : [];
 }
 
+// высота таблицы — по окну, чтобы заголовки могли липнуть при вертикальной прокрутке
+function fitWrap() {
+  const bar = $('.bar');
+  const barH = bar ? bar.getBoundingClientRect().height : 0;
+  const h = Math.max(300, Math.round(window.innerHeight - barH - 28));
+  document.documentElement.style.setProperty('--wrap-h', h + 'px');
+}
+window.addEventListener('resize', () => { fitWrap(); });
+
 function renderBoard() {
   const ent = entity();
   const board = $('#board');
@@ -524,6 +533,7 @@ function renderBoard() {
   html += `</div></div>`;
   board.innerHTML = html;
   markNow(n);
+  fitWrap();
   const gw = $('.grid-wrap');
   if (gw) {
     gw.classList.toggle('is-scrollable', gw.scrollWidth > gw.clientWidth + 4);
