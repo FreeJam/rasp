@@ -10,8 +10,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=5">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=7">
 </head>
 <body>
 
@@ -67,9 +67,15 @@
     </div>
   </div>
 
-  <main id="board">
-    <div class="skeleton"></div>
-  </main>
+  <div class="board-frame">
+    <i class="hud tl" aria-hidden="true"></i>
+    <i class="hud tr" aria-hidden="true"></i>
+    <i class="hud bl" aria-hidden="true"></i>
+    <i class="hud br" aria-hidden="true"></i>
+    <main id="board">
+      <div class="skeleton"></div>
+    </main>
+  </div>
 
   <footer class="foot">
     <span id="footNote">Источник: aSc Timetables</span>
@@ -98,6 +104,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/app.js?v=5"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>

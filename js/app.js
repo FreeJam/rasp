@@ -197,6 +197,12 @@ function passes(e) {
 
 const visibleEntries = (list) => (list || []).filter(passes);
 
+// короткие коды классов: «11 т-2/1», длинные списки сворачиваем
+function clsShort(list) {
+  const names = list.map((c) => c.short.replace(/\s*\/\s*/g, '/'));
+  return names.length > 2 ? `${names[0]} +${names.length - 1}` : names.join(', ');
+}
+
 function groupChips(e) {
   if (S.mode !== 'class') return [];
   const own = e.g.filter((g) => g.class === S.sel.class);
@@ -270,7 +276,10 @@ function tickLive() {
 function markNow(n) {
   $$('.is-now').forEach((el) => el.classList.remove('is-now'));
   if (!n.cur) return;
-  $$(`[data-slot="${n.day}-${n.cur.n}"]`).forEach((el) => el.classList.add('is-now'));
+  $$(`[data-slot="${n.day}-${n.cur.n}"]`).forEach((el) => {
+    el.classList.add('is-now');
+    $$('.les', el).forEach((t) => t.classList.add('is-now'));
+  });
   $$(`[data-timenum="${n.cur.n}"]`).forEach((el) => el.classList.add('is-now'));
 }
 
@@ -305,34 +314,25 @@ function renderPicker() {
 function cardHTML(e, ent, half) {
   const idx = RENDER.push(e) - 1;
   const chips = groupChips(e);
-  // короткие коды классов: «11 т-2/1» вместо «11 т-2 /1», длинные списки сворачиваем
-  const clsShort = (list) => {
-    const names = list.map((c) => c.short.replace(/\s*\/\s*/g, '/'));
-    return names.length > 2 ? `${names[0]} +${names.length - 1}` : names.join(', ');
-  };
-  let meta = '';
-  let badge = '';
-  if (ent.type === 'class') {
-    meta = e.t.map((t) => t.short).join(', ');
-    badge = e.r.map((r) => r.short).join(', ');
-  } else if (ent.type === 'teacher') {
-    meta = clsShort(e.c);
-    badge = e.r.map((r) => r.short).join(', ');
-  } else {
-    meta = e.t.map((t) => t.short).join(', ');
-    badge = clsShort(e.c);
-  }
-  if (chips.length) meta += '';
-  const tip = `${e.s.name} · ${meta}${badge ? ' · ' + badge : ''}`;
-  return `<button class="les cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''} ${half ? 'half' : ''}"
+
+  // служебная строка: кабинет первым (его ищут чаще всего), затем учитель/класс
+  const room = e.r.map((r) => r.short).join(', ');
+  let second = '';
+  if (ent.type === 'class') second = e.t.map((t) => t.short).join(', ');
+  else if (ent.type === 'teacher') second = clsShort(e.c);
+  else second = e.t.map((t) => t.short).join(', ');
+
+  const tip = `${e.s.name}${room ? ' · ' + room : ''}${second ? ' · ' + second : ''}`;
+  return `<button class="les cat-${e.s.cat} ${kindOf(e) !== 'lesson' ? 'is-extra' : ''}"
       data-act="les" data-i="${idx}" type="button" title="${esc(tip)}">
       <span class="les-top">
         ${half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
         <span class="les-sub">${esc(e.s.short)}</span>
-        ${badge ? `<span class="les-room">${esc(badge)}</span>` : ''}
       </span>
       <span class="les-meta">
-        <span class="les-teacher">${esc(meta)}</span>
+        ${room ? `<span class="les-room">${esc(room)}</span>` : ''}
+        ${room && second ? '<span class="les-sep">·</span>' : ''}
+        ${second ? `<span class="les-teacher">${esc(second)}</span>` : ''}
         ${!half && chips.length ? `<span class="les-grp">${esc(chips.join(' · '))}</span>` : ''}
       </span>
     </button>`;
@@ -396,8 +396,8 @@ function renderBoard() {
   periods.forEach((p, j) => {
     const now = n.cur && n.cur.n === p.n;
     html += `<div class="wk-ph ${now ? 'is-now' : ''} ${extraCol(p.n) ? 'is-extra' : ''}"
-      style="grid-row:1;grid-column:${j + 2}" data-timenum="${p.n}">
-      <b>${p.n}</b><span>${fmtTime(p.start)}-${fmtTime(p.end)}</span></div>`;
+      style="grid-row:1;grid-column:${j + 2}" data-timenum="${p.n}" data-col="${j + 2}">
+      <b>${p.n}</b><span>${fmtTime(p.start)}-${fmtTime(p.end)}</span>${now ? '<i class="live-tag">live</i>' : ''}</div>`;
   });
 
   D.meta.days.forEach((d, i) => {
@@ -413,7 +413,7 @@ function renderBoard() {
       const list = visibleEntries(cellsFor(d.i)[String(p.n)]);
       html += `<div class="wk-cell ${list.length ? '' : 'is-empty'} ${p.n % 2 === 0 ? 'is-alt' : ''}"
         style="grid-row:${row};grid-column:${j + 2}"
-        data-slot="${d.i}-${p.n}">${cardsHTML(list, ent)}</div>`;
+        data-slot="${d.i}-${p.n}" data-col="${j + 2}">${cardsHTML(list, ent)}</div>`;
     });
   });
 
@@ -425,7 +425,7 @@ function renderBoard() {
     gw.classList.toggle('is-scrollable', gw.scrollWidth > gw.clientWidth + 4);
     // подводим к текущему уроку, если он за краем
     const cur = nowInfo();
-    if (cur.cur) {
+    if (cur.cur && window.matchMedia('(max-width: 900px)').matches) {
       const cell = gw.querySelector(`.wk-cell[data-slot="${cur.day}-${cur.cur.n}"]`);
       if (cell && (cell.offsetLeft > gw.scrollLeft + gw.clientWidth - 80)) {
         gw.scrollLeft = Math.max(0, cell.offsetLeft - 140);
@@ -794,6 +794,24 @@ $('#live').addEventListener('click', () => {
   const n = nowInfo();
   scrollToDay(n.day >= 0 ? n.day : 0);
 });
+/* подсветка столбца под курсором */
+(function columnHover() {
+  const board = $('#board');
+  board.addEventListener('mouseover', (e) => {
+    const el = e.target.closest('[data-col]');
+    if (!el) return;
+    const col = el.dataset.col;
+    if (board._col === col) return;
+    board._col = col;
+    $$('.wk-cell.is-hot', board).forEach((c) => c.classList.remove('is-hot'));
+    $$(`.wk-cell[data-col="${col}"]`, board).forEach((c) => c.classList.add('is-hot'));
+  });
+  board.addEventListener('mouseleave', () => {
+    board._col = null;
+    $$('.wk-cell.is-hot', board).forEach((c) => c.classList.remove('is-hot'));
+  });
+})();
+
 $('#sheetClose').addEventListener('click', closeSheet);
 $('#sheetBack').addEventListener('click', closeSheet);
 
