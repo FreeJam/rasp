@@ -729,3 +729,131 @@ html[data-density="large"] .les-meta { font-size: 13px; }
   .les { break-inside: avoid; }
   .print-head { display: block; padding: 0 0 10px; font-size: 14px; font-family: var(--f-display); }
 }
+
+/* ── атмосферный фон и декор шапки ───────────────────────────── */
+.bg-art { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bg-art svg { width: 100%; height: 100%; opacity: .34; }
+html[data-theme="light"] .bg-art svg { opacity: .16; }
+.bg-art * { fill: none; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bg-art .c1 { stroke: var(--blue); }
+.bg-art .c2 { stroke: var(--purple); }
+.bg-art .c3 { stroke: var(--pink); }
+.bg-art .dot { fill: var(--pink); stroke: none; }
+.bg-art .pt { fill: var(--blue); stroke: none; }
+.bg-art .orb { animation: spin linear infinite; transform-box: view-box; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bg-art .orb { animation: none; } }
+
+.app { position: relative; z-index: 1; }
+.bar-art { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bar-art svg { width: 100%; height: 100%; opacity: .55; }
+.bar-art * { fill: none; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bar-art .c1 { stroke: var(--blue); }
+.bar-art .c2 { stroke: var(--purple); }
+.bar-art .c3 { stroke: var(--pink); }
+.bar-art .pt { fill: var(--purple); stroke: none; }
+html[data-theme="light"] .bar-art svg { opacity: .3; }
+.bar-inner { position: relative; z-index: 1; }
+
+
+/* ── творческий слой: свечения, дрейф, гекс-сетка, звёзды ─────── */
+.bg-glow {
+  position: fixed; inset: -10%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 12% 18%, rgba(59,130,246,.22), transparent 70%),
+    radial-gradient(34% 40% at 86% 22%, rgba(139,92,246,.20), transparent 70%),
+    radial-gradient(40% 46% at 72% 92%, rgba(244,114,182,.16), transparent 70%),
+    radial-gradient(30% 36% at 22% 88%, rgba(139,92,246,.14), transparent 70%);
+  animation: glowDrift 26s ease-in-out infinite alternate;
+}
+html[data-theme="light"] .bg-glow { opacity: .35; }
+@keyframes glowDrift {
+  0%   { transform: translate3d(0,0,0) scale(1); }
+  100% { transform: translate3d(-3%,2%,0) scale(1.06); }
+}
+
+.bg-hex {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .09;
+  background-image:
+    linear-gradient(30deg, var(--blue) 12%, transparent 12.5%, transparent 87%, var(--blue) 87.5%, var(--blue)),
+    linear-gradient(150deg, var(--purple) 12%, transparent 12.5%, transparent 87%, var(--purple) 87.5%, var(--purple)),
+    linear-gradient(30deg, var(--purple) 12%, transparent 12.5%, transparent 87%, var(--purple) 87.5%, var(--purple)),
+    linear-gradient(150deg, var(--pink) 12%, transparent 12.5%, transparent 87%, var(--pink) 87.5%, var(--pink));
+  background-size: 80px 140px;
+  background-position: 0 0, 0 0, 40px 70px, 40px 70px;
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 0%, transparent 70%);
+}
+html[data-theme="light"] .bg-hex { opacity: .06; }
+
+.bg-drift {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.bg-drift i {
+  position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: var(--pink); box-shadow: 0 0 8px var(--pink);
+  opacity: .0; animation: rise linear infinite;
+}
+.bg-drift i:nth-child(3n)   { background: var(--blue);   box-shadow: 0 0 8px var(--blue); }
+.bg-drift i:nth-child(3n+1) { background: var(--purple); box-shadow: 0 0 8px var(--purple); }
+@keyframes rise {
+  0%   { transform: translateY(0) scale(.6); opacity: 0; }
+  15%  { opacity: .8; }
+  85%  { opacity: .5; }
+  100% { transform: translateY(-110vh) scale(1.1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bg-glow, .bg-drift i { animation: none; }
+}
+html[data-theme="light"] .bg-drift i { opacity: .35; }
+
+/* звёздный узор в шапке: мерцание точек */
+.bar-art .pt { animation: twinkle 3.6s ease-in-out infinite; }
+.bar-art .pt:nth-child(4n)  { animation-delay: -1.2s; }
+.bar-art .pt:nth-child(5n)  { animation-delay: -2.4s; }
+@keyframes twinkle { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .bar-art .pt { animation: none; } }
+
+/* неоновая линия под шапкой, переливается */
+.bar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: var(--grad); background-size: var(--grad-size);
+  animation: fsg 6s linear infinite; opacity: .8; pointer-events: none;
+}
+
+
+/* ── отделение уроков: явные рамки, зазоры, стекинг ───────────── */
+.wk-cell {
+  border-right: 1px solid var(--cell-line, rgba(255,255,255,.09));
+  border-bottom: 1px solid var(--cell-line, rgba(255,255,255,.09));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+.wk-cell:not(.is-empty) { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.wk-cell.is-empty { background: color-mix(in srgb, var(--bg) 70%, #000 30%); }
+
+.les {
+  border: 1px solid var(--cell-line, rgba(255,255,255,.09));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02), 0 1px 0 rgba(0,0,0,.35);
+  margin: 2px;
+}
+.les::after {
+  content: ""; position: absolute; left: 0; bottom: 0; width: 22px; height: 2px;
+  background: var(--accent); opacity: .9; pointer-events: none;
+}
+.les-combo .les { margin: 0; border: 0; }
+.les-combo .les + .les {
+  border-top: 2px solid var(--cell-line-strong, rgba(255,255,255,.18));
+}
+.les:hover, .les:active { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+html[data-theme="light"] {
+  --cell-line: rgba(17, 19, 24, .16);
+  --cell-line-strong: rgba(17, 19, 24, .34);
+}
+html[data-theme="light"] .wk-cell:not(.is-empty) { background: #FFFFFF; }
+html[data-theme="light"] .wk-cell.is-empty { background: #EEF1F5; }
+html[data-theme="light"] .les {
+  box-shadow: 0 1px 2px rgba(11, 14, 20, .08), inset 0 0 0 1px rgba(255,255,255,.6);
+}
+html[data-theme="light"] .les::before { height: 4px; }
+html[data-theme="light"] .les::after { height: 3px; width: 34px; }

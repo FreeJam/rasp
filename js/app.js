@@ -935,7 +935,76 @@ document.addEventListener('keydown', (e) => {
 })();
 
 /* ── запуск ──────────────────────────────────────────────────── */
+
+/* ── фон: большие генеративные рисунки за таблицей и в шапке ───── */
+function paintArt() {
+  const drift = $('#bgDrift');
+  if (drift && !drift.childElementCount) {
+    const r0 = seeded(hashStr('rasp-drift'));
+    let s = '';
+    for (let i = 0; i < 26; i++) {
+      s += `<i style="left:${(r0()*100).toFixed(1)}%;bottom:-20px;animation-duration:${(18+r0()*22).toFixed(1)}s;animation-delay:-${(r0()*30).toFixed(1)}s"></i>`;
+    }
+    drift.innerHTML = s;
+  }
+  const r = seeded(hashStr('rasp-art-v1'));
+  const f = (x) => x.toFixed(1);
+  let g = '';
+  // 1. атомные орбиты (вращаются медленно, отключаются при reduce-motion)
+  for (let k = 0; k < 5; k++) {
+    const cx = 80 + r() * 1440, cy = 60 + r() * 880, rings = 3 + Math.floor(r() * 3);
+    const dur = (50 + r() * 70).toFixed(0), dir = r() < 0.5 ? 'normal' : 'reverse';
+    g += `<g class="orb" style="animation-duration:${dur}s;animation-direction:${dir};transform-origin:${f(cx)}px ${f(cy)}px">`;
+    for (let i = 1; i <= rings; i++) {
+      const rx = 60 + i * (45 + r() * 30), ry = rx * (0.28 + r() * 0.42), rot = r() * 180;
+      const th = rot * Math.PI / 180, a = r() * Math.PI * 2;
+      const px = rx * Math.cos(a), py = ry * Math.sin(a);
+      const dx = px * Math.cos(th) - py * Math.sin(th), dy = px * Math.sin(th) + py * Math.cos(th);
+      g += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rx)}" ry="${f(ry)}" transform="rotate(${f(rot)} ${f(cx)} ${f(cy)})" class="c${(i % 3) + 1}"/>`;
+      g += `<circle cx="${f(cx + dx)}" cy="${f(cy + dy)}" r="3.5" class="dot"/>`;
+    }
+    g += `<circle cx="${f(cx)}" cy="${f(cy)}" r="7" class="dot"/></g>`;
+  }
+  // 2. волновые ленты внизу
+  for (let b = 0; b < 3; b++) {
+    const y0 = 720 + b * 85;
+    for (let i = 0; i < 6; i++) {
+      const amp = 20 + r() * 55, fr = (1 + r() * 2) * 2 * Math.PI / (700 + r() * 500), p = r() * 6.28;
+      let d = `M-20 ${f(y0 + i * 9)}`;
+      for (let x = 0; x <= 1620; x += 20) d += ` L${x} ${f(y0 + i * 9 + amp * Math.sin(fr * x + p))}`;
+      g += `<path d="${d}" class="c${(i % 3) + 1}"/>`;
+    }
+  }
+  // 3. созвездие частиц
+  const pts = [];
+  for (let i = 0; i < 80; i++) pts.push([r() * 1600, r() * 1000]);
+  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+    const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
+    if (d < 150) g += `<line x1="${f(pts[i][0])}" y1="${f(pts[i][1])}" x2="${f(pts[j][0])}" y2="${f(pts[j][1])}" class="c1" style="opacity:${f(1 - d / 150)}"/>`;
+  }
+  for (const [x, y] of pts) g += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(1 + r() * 1.8)}" class="pt"/>`;
+  // 4. перспективная сетка (пол) в нижней правой четверти
+  const vx = 1150, vy = 640;
+  for (let i = 0; i < 9; i++) g += `<line x1="${f(vx + (i - 4) * 260)}" y1="1000" x2="${f(vx)}" y2="${vy}" class="c2" style="opacity:.6"/>`;
+  for (let j = 1; j <= 7; j++) { const y = vy + Math.pow(j / 7, 2) * 360; g += `<line x1="0" y1="${f(y)}" x2="1600" y2="${f(y)}" class="c2" style="opacity:${f(0.15 + j / 14)}"/>`; }
+  const host = $('#bgArt');
+  if (host) host.innerHTML = `<svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">${g}</svg>`;
+
+  // шапка: длинные ленты и точки, растянуты по ширине
+  let h = '';
+  for (let i = 0; i < 4; i++) {
+    const amp = 10 + r() * 14, fr = (1 + r() * 3) * 2 * Math.PI / 1600, p = r() * 6.28, y0 = 14 + i * 7;
+    let d = `M0 ${f(y0)}`;
+    for (let x = 0; x <= 1600; x += 16) d += ` L${x} ${f(y0 + amp * Math.sin(fr * x + p))}`;
+    h += `<path d="${d}" class="c${(i % 3) + 1}"/>`;
+  }
+  for (let i = 0; i < 90; i++) h += `<circle cx="${f(r() * 1600)}" cy="${f(r() * 60)}" r="${f(0.8 + r() * 1.2)}" class="pt"/>`;
+  const bar = $('#barArt');
+  if (bar) bar.innerHTML = `<svg viewBox="0 0 1600 60" preserveAspectRatio="none">${h}</svg>`;
+}
+
 async function boot() {
+  paintArt();
   try {
     const res = await fetch('data/schedule.json', { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);

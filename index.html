@@ -11,9 +11,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=8">
+<link rel="stylesheet" href="css/app.css?v=11">
 </head>
 <body>
+<div class="bg-glow" aria-hidden="true"></div>
+<div class="bg-hex" aria-hidden="true"></div>
+<div class="bg-drift" id="bgDrift" aria-hidden="true"></div>
+<div class="bg-art" id="bgArt" aria-hidden="true"></div>
 
 <div class="scrollbar" aria-hidden="true"><div class="thumb" id="scrollThumb"></div></div>
 
@@ -22,6 +26,7 @@
   <h1 class="sr-only">Расписание уроков 10–11 классов</h1>
 
   <header class="bar">
+    <div class="bar-art" id="barArt" aria-hidden="true"></div>
     <div class="bar-inner">
       <div class="segmented" role="tablist" aria-label="Что показывать">
         <button class="seg-btn is-active" role="tab" aria-selected="true" data-mode="class" type="button">
@@ -103,6 +108,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/app.js?v=8"></script>
+<script src="js/app.js?v=11"></script>
 </body>
 </html>
