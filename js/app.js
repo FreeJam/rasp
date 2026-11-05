@@ -239,13 +239,13 @@ function tickLive() {
   } else if (n.cur) {
     box.classList.remove('is-break');
     const left = toMin(n.cur.end) - n.mins;
-    txt.innerHTML = `<b>${n.cur.n} урок</b> · ${range(n.cur)} · ещё ${left} ${plural(left, 'минута', 'минуты', 'минут')}`;
+    txt.innerHTML = `<b>${n.cur.n}-й урок</b> · ${range(n.cur)} · ещё ${left} ${plural(left, 'минута', 'минуты', 'минут')}`;
     const total = toMin(n.cur.end) - toMin(n.cur.start);
     bar.style.width = Math.max(2, Math.min(100, ((n.mins - toMin(n.cur.start)) / total) * 100)) + '%';
   } else if (n.next) {
     box.classList.add('is-break');
     const left = toMin(n.next.start) - n.mins;
-    txt.innerHTML = `<b>Перемена</b> · ${n.next.n} урок через ${left} ${plural(left, 'минуту', 'минуты', 'минут')}`;
+    txt.innerHTML = `<b>Перемена</b> · ${n.next.n}-й урок через ${left} ${plural(left, 'минуту', 'минуты', 'минут')}`;
     bar.style.width = '0%';
   } else {
     box.classList.add('is-break');
@@ -391,7 +391,8 @@ function renderBoard() {
     const isToday = n.day === d.i;
     html += `<div class="wk-day ${isToday ? 'is-today' : ''}" data-day="${d.i}">
       <b><span class="d-long">${d.full}</span><span class="d-short">${d.short}</span></b>
-      <span>${counts[d.i]}<em>${plural(counts[d.i], ' урок', ' урока', ' уроков')}</em></span></div>`;
+      <span>${counts[d.i]}<em>${plural(counts[d.i], ' урок', ' урока', ' уроков')}</em></span>
+      ${isToday ? '<i class="today-tag">сегодня</i>' : ''}</div>`;
     for (const p of periods) {
       const list = visibleEntries(cellsFor(d.i)[String(p.n)]);
       html += `<div class="wk-cell ${list.length ? '' : 'is-empty'} ${isToday ? 'is-today' : ''} ${p.n % 2 === 0 ? 'is-alt' : ''}"

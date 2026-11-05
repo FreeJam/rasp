@@ -39,7 +39,7 @@
 
   --nav-h: 52px;
   --day-w: 118px;
-  --cell-h: 106px;
+  --cell-h: 96px;
   --fs-sub: 14.5px;
   --muted-2: #AAB2C0;
 
@@ -112,7 +112,7 @@ svg { display: block; }
   opacity: 0; transition: opacity .3s;
   animation: fsg 4s linear infinite;
 }
-.scrollbar.visible .thumb { opacity: .65; }
+.scrollbar.visible .thumb { opacity: .38; }
 @keyframes fsg { to { background-position: 200% 0; } }
 @media (max-width: 900px), (pointer: coarse) { .scrollbar { display: none; } }
 
@@ -346,6 +346,13 @@ html[data-theme="light"] .seg-btn.is-active { background: #fff; box-shadow: 0 1p
 .wk-day.is-today b { color: #C4B5FD; }
 html[data-theme="light"] .wk-day.is-today b { color: #6C3FD8; }
 .wk-day.is-today span { color: var(--purple); }
+.today-tag {
+  align-self: flex-start; margin-top: 3px;
+  font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: #C4B5FD; background: color-mix(in srgb, var(--purple) 22%, transparent);
+  padding: 2px 6px; border-radius: 4px;
+}
+html[data-theme="light"] .today-tag { color: #5B32C0; background: color-mix(in srgb, var(--purple) 14%, transparent); }
 .wk-day.is-today::after {
   content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
   background: var(--grad); background-size: 100% 300%;
@@ -654,6 +661,7 @@ html[data-density="large"] .les-meta { font-size: 12.5px; }
   .wk-day b { font-size: 14px; }
   .wk-day span { font-size: 10.5px; }
   .wk-day span em { display: none; }
+  .today-tag { display: none; }
   .wk-cell { padding: 5px; }
   .les { padding: 6px 6px 6px 10px; }
   .les-sub { font-size: 12.5px; }
